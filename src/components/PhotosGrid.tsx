@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLoaderData } from 'react-router'
+
+import type { Photo } from '../apiService'
 
 function PhotosGrid() {
-	const [photos, _setPhotos] = useState<{ id: number }[]>([
-		{ id: 32460307 },
-		{ id: 20351658 },
-		{ id: 32420643 },
-	])
+	const { initialPhotos }: { initialPhotos: Photo[] } = useLoaderData()
+
+	const [photos, _setPhotos] = useState<Photo[]>(initialPhotos)
 
 	return (
 		<div className='container mx-auto'>
@@ -14,10 +14,19 @@ function PhotosGrid() {
 				Photo Gallery
 			</h1>
 
-			<div className='flex'>
-				{photos.map(({ id }) => (
-					<Link to={`/photos/${id}`} key={id}>
-						<div className='bg-white rounded-lg p-6 m-4'>{id}</div>
+			<div className='flex flex-wrap'>
+				{photos.map((photo) => (
+					<Link
+						key={photo.id}
+						to={`/photos/${photo.id}`}
+						className='p-1 box-border transition-transform duration-100 ease-out'
+					>
+						<img
+							src={photo.src.medium}
+							alt={photo.alt || `Photo ${photo.id}`}
+							className='w-full h-full object-cover rounded shadow-md'
+							loading='lazy'
+						/>
 					</Link>
 				))}
 			</div>

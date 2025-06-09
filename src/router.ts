@@ -1,5 +1,9 @@
 import { createBrowserRouter, redirect } from 'react-router'
+import type { Photo, Photos } from './apiService'
+import { ApiHelper } from './apiService'
 import AppLayout from './AppLayout'
+import ErrorMessage from './components/ErrorMessage'
+import Loading from './components/Loading'
 import NotFound from './components/NotFound'
 import PhotoDetails from './components/PhotoDetails'
 import PhotosGrid from './components/PhotosGrid'
@@ -13,13 +17,37 @@ const router = createBrowserRouter([
 		path: '/photos',
 		Component: AppLayout,
 		children: [
-			{ index: true, Component: PhotosGrid },
+			{
+				index: true,
+				loader: async () => {
+					const api = ApiHelper.getInstance()
+					try {
+						const res: Photos = await api.fetchPhotos()
+						return { initialPhotos: res.photos }
+					} catch (error) {
+						console.error('An error occurred during data fetching:', error)
+						return []
+					}
+				},
+				Component: PhotosGrid,
+				ErrorBoundary: ErrorMessage,
+				HydrateFallback: Loading,
+			},
 			{
 				path: ':photoId',
 				loader: async ({ params }) => {
-					return { id: params.photoId }
+					const api = ApiHelper.getInstance()
+					try {
+						const res: Photo = await api.fetchPhoto(params.photoId as string)
+						return { photo: res }
+					} catch (error) {
+						console.error('An error occurred during data fetching:', error)
+						return null
+					}
 				},
 				Component: PhotoDetails,
+				ErrorBoundary: ErrorMessage,
+				HydrateFallback: Loading,
 			},
 		],
 	},
