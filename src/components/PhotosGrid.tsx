@@ -12,10 +12,10 @@ import {
 	SCROLL_DEBOUNCE,
 	VIEWPORT_BUFFER,
 } from '../constants'
+import type { GridItem } from '../types'
 import { findMinItemIndex } from '../utils'
 
 import PhotoGridItem from './PhotoGridItem'
-import type { GridItem } from './types'
 
 const api = ApiHelper.getInstance()
 
@@ -74,7 +74,7 @@ export default function PhotosGrid() {
 			columnHeights[columnIndex] += itemRenderHeight
 
 			return {
-				alt: photo.alt,
+				alt: photo.alt || `Photo ${photo.id}`,
 				height: itemRenderHeight,
 				id: photo.id,
 				left: itemLeft,
@@ -138,9 +138,13 @@ export default function PhotosGrid() {
 		)
 	}, [containerHeight, gridItems, scrollPosition])
 
-	const onScroll = debounce((e: UIEvent<HTMLDivElement>) => {
-		setScrollPosition(e.currentTarget.scrollTop)
-	}, SCROLL_DEBOUNCE)
+	const onScroll = (e: UIEvent<HTMLDivElement>) => {
+		const scrollTop = e.currentTarget.scrollTop
+		const debouncedSetScrollPosition = debounce(() => {
+			setScrollPosition(scrollTop)
+		}, SCROLL_DEBOUNCE)
+		debouncedSetScrollPosition()
+	}
 
 	return (
 		<div className='container mx-auto'>
@@ -158,7 +162,7 @@ export default function PhotosGrid() {
 			</div>
 			<div
 				ref={containerRef}
-				className='relative h-full overflow-y-scroll will-change-transform'
+				className='relative overflow-y-scroll photos-grid-container no-scrollbar'
 				onScroll={onScroll}
 			>
 				<div
