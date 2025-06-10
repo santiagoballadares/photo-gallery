@@ -1,10 +1,10 @@
 import debounce from 'lodash/debounce'
-import type { UIEvent } from 'react'
+import type { ChangeEvent, UIEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLoaderData } from 'react-router'
 
 import type { Photo } from '../apiService'
-import { ApiHelper } from '../apiService'
+import { ApiHelper, MAX_ITEMS_PER_PAGE } from '../apiService'
 import {
 	COLUMN_WIDTH,
 	DEFAULT_DEBOUNCE,
@@ -30,24 +30,37 @@ export default function PhotosGrid() {
 
 	const [scrollPosition, setScrollPosition] = useState(0)
 
-	const [debouncedQuery, setDebouncedQuery] = useState<string>('')
+	const prevQueryRef = useRef('')
 	const [query, setQuery] = useState<string>('')
 
-	useEffect(() => {
-		const timeoutId = setTimeout(() => {
-			setDebouncedQuery(query.trim())
+	const debouncedFetch = useRef(
+		debounce(async (query) => {
+			const prevQuery = prevQueryRef.current
+			prevQueryRef.current = query
+
+			if (query.trim() === '' && prevQuery.trim() === '') {
+				return
+			}
+
+			const response = await api.fetchPhotos({
+				per_page: MAX_ITEMS_PER_PAGE,
+				query,
+			})
+			setPhotos(response.photos)
 		}, DEFAULT_DEBOUNCE)
+	).current
+
+	useEffect(() => {
+		debouncedFetch(query.trim())
 
 		return () => {
-			clearTimeout(timeoutId)
+			debouncedFetch.cancel()
 		}
-	}, [query])
+	}, [query, debouncedFetch])
 
-	useEffect(() => {
-		api.fetchPhotos(debouncedQuery).then((value) => {
-			setPhotos(value.photos)
-		})
-	}, [debouncedQuery])
+	const onChangeInput = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+		setQuery(e.target.value)
+	}, [])
 
 	const calculateLayout = useCallback(() => {
 		if (!containerRef.current || photos.length === 0) {
@@ -138,25 +151,23 @@ export default function PhotosGrid() {
 		)
 	}, [containerHeight, gridItems, scrollPosition])
 
-	const onScroll = (e: UIEvent<HTMLDivElement>) => {
+	const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
 		const scrollTop = e.currentTarget.scrollTop
 		const debouncedSetScrollPosition = debounce(() => {
 			setScrollPosition(scrollTop)
 		}, SCROLL_DEBOUNCE)
 		debouncedSetScrollPosition()
-	}
+	}, [])
 
 	return (
 		<div className='container mx-auto'>
 			<div className='flex flex-col sm:flex-row justify-between items-center mb-6'>
-				<h1 className='text-3xl font-bold text-gray-800 mb-4 sm:mb-0'>
-					Photo Gallery
-				</h1>
+				<h1 className='text-3xl font-bold mb-4 sm:mb-0'>Photo Gallery</h1>
 				<input
 					type='text'
 					placeholder='Search photos...'
 					className='w-full sm:w-1/2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-					onChange={(e) => setQuery(e.target.value)}
+					onChange={onChangeInput}
 					value={query}
 				/>
 			</div>

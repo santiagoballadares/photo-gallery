@@ -1,5 +1,10 @@
-import type { Photo, Photos } from 'pexels'
+import type { PaginationParams, Photo, Photos } from 'pexels'
 import { createClient } from 'pexels'
+
+// See https://www.pexels.com/api/documentation/#pagination
+const MAX_ITEMS_PER_PAGE = 80
+
+type FetchParams = PaginationParams & { query?: string }
 
 const apiKey = import.meta.env.VITE_PEXELS_API_KEY
 
@@ -18,11 +23,17 @@ class ApiHelper {
 		return ApiHelper.instance
 	}
 
-	public async fetchPhotos(query?: string): Promise<Photos> {
+	public async fetchPhotos(params?: FetchParams): Promise<Photos> {
+		const { page, per_page, query } = params ?? {}
+		const paginationParams = {
+			...(page ? { page } : {}),
+			...(per_page ? { per_page: Math.min(per_page, MAX_ITEMS_PER_PAGE) } : {}),
+		}
+
 		try {
 			const response = query
-				? await this.pexelsClient.photos.search({ query })
-				: await this.pexelsClient.photos.curated()
+				? await this.pexelsClient.photos.search({ query, ...paginationParams })
+				: await this.pexelsClient.photos.curated(paginationParams)
 
 			if ('error' in response) {
 				throw new Error(response.error)
@@ -51,5 +62,5 @@ class ApiHelper {
 	}
 }
 
-export { ApiHelper }
-export type { Photo, Photos }
+export { ApiHelper, MAX_ITEMS_PER_PAGE }
+export type { FetchParams, Photo, Photos }

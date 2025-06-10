@@ -1,6 +1,6 @@
 import { createBrowserRouter, redirect } from 'react-router'
 import type { Photo, Photos } from './apiService'
-import { ApiHelper } from './apiService'
+import { ApiHelper, MAX_ITEMS_PER_PAGE } from './apiService'
 import AppLayout from './AppLayout'
 import ErrorMessage from './components/ErrorMessage'
 import Loading from './components/Loading'
@@ -22,7 +22,9 @@ const router = createBrowserRouter([
 				loader: async () => {
 					const api = ApiHelper.getInstance()
 					try {
-						const res: Photos = await api.fetchPhotos()
+						const res: Photos = await api.fetchPhotos({
+							per_page: MAX_ITEMS_PER_PAGE,
+						})
 						return { initialPhotos: res.photos }
 					} catch (error) {
 						console.error('An error occurred during data fetching:', error)
