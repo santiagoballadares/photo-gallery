@@ -3,7 +3,7 @@ import { Outlet } from 'react-router'
 function App() {
 	return (
 		<>
-			<main className='min-h-screen bg-gray-100 p-4'>
+			<main className='min-h-screen p-4'>
 				<Outlet />
 			</main>
 			<footer className='flex flex-col items-center justify-center'>

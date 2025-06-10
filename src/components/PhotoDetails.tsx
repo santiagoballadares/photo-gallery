@@ -9,7 +9,7 @@ export default function PhotoDetails() {
 		<div className='container mx-auto'>
 			<div className='mb-6'>
 				<Link
-					className='flex items-center text-blue-600 hover:text-blue-800 font-semibold'
+					className='flex items-center hover:font-bold font-semibold'
 					to={'/'}
 				>
 					<svg
@@ -31,7 +31,7 @@ export default function PhotoDetails() {
 			</div>
 
 			{photo && (
-				<div className='bg-white rounded-lg shadow-lg overflow-hidden md:flex'>
+				<div className='bg-secondary rounded-lg shadow-lg overflow-hidden md:flex'>
 					<div className='md:w-2/3'>
 						<img
 							src={photo.src.original}
@@ -41,15 +41,15 @@ export default function PhotoDetails() {
 					</div>
 					<div className='md:w-1/3 p-6 flex flex-col justify-between'>
 						<div>
-							<h3 className='text-3xl font-bold text-gray-800 mb-2'>
+							<h3 className='text-3xl font-bold mb-2'>
 								{photo.alt || `Photo ${photo.id}`}
 							</h3>
-							<div className='text-gray-600 text-sm'>
-								<p className='mb-1'>
+							<div className='text-sm'>
+								<p className='mb-1 break-all'>
 									<strong className='font-semibold'>Photographer:</strong>{' '}
 									{photo.photographer}
 								</p>
-								<p className='mb-1'>
+								<p className='mb-1 break-all'>
 									<strong className='font-semibold'>Url:</strong>{' '}
 									{photo.photographer_url}
 								</p>
