@@ -34,6 +34,30 @@
 	@apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mx-auto my-8;
 }
 
+@keyframes loading-key-frames {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+.loading-block {
+	position: 'absolute';
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
+	background-size: 200% 100%;
+	animation: loading-key-frames 1.5s infinite linear;
+	border: 1px solid #fff;
+}
+
 .photos-grid-container {
 	height: calc(
 		100vh - 108px
