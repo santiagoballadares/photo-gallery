@@ -25,7 +25,7 @@ const router = createBrowserRouter([
 						const res: Photos = await api.fetchPhotos({
 							per_page: MAX_ITEMS_PER_PAGE,
 						})
-						return { initialPhotos: res.photos }
+						return { initialData: res }
 					} catch (error) {
 						console.error('An error occurred during data fetching:', error)
 						return []

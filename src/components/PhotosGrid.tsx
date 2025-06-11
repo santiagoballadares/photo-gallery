@@ -3,7 +3,7 @@ import type { ChangeEvent, UIEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLoaderData } from 'react-router'
 
-import type { Photo } from '../apiService'
+import type { Photo, Photos } from '../apiService'
 import { ApiHelper, MAX_ITEMS_PER_PAGE } from '../apiService'
 import {
 	COLUMN_WIDTH,
@@ -20,8 +20,10 @@ import PhotoGridItem from './PhotoGridItem'
 const api = ApiHelper.getInstance()
 
 export default function PhotosGrid() {
-	const { initialPhotos }: { initialPhotos: Photo[] } = useLoaderData()
-	const [photos, setPhotos] = useState<Photo[]>(initialPhotos)
+	const { initialData }: { initialData: Photos } = useLoaderData()
+
+	const pageRef = useRef(initialData.page)
+	const [photos, setPhotos] = useState<Photo[]>(initialData.photos)
 	const [gridItems, setGridItems] = useState<GridItem[]>([])
 
 	const containerRef = useRef<HTMLDivElement | null>(null)
@@ -33,7 +35,16 @@ export default function PhotosGrid() {
 	const prevQueryRef = useRef('')
 	const [query, setQuery] = useState<string>('')
 
-	const debouncedFetch = useRef(
+	const hasNextPage = useRef<boolean>(initialData.next_page !== undefined)
+
+	const resetScroll = useCallback(() => {
+		if (containerRef.current) {
+			containerRef.current.scrollTop = 0
+		}
+		setScrollPosition(0)
+	}, [])
+
+	const debouncedQueryFetch = useRef(
 		debounce(async (query) => {
 			const prevQuery = prevQueryRef.current
 			prevQueryRef.current = query
@@ -43,24 +54,52 @@ export default function PhotosGrid() {
 			}
 
 			const response = await api.fetchPhotos({
+				page: 1,
 				per_page: MAX_ITEMS_PER_PAGE,
 				query,
 			})
+
 			setPhotos(response.photos)
+			resetScroll()
+			pageRef.current = response.page
+			hasNextPage.current = response.next_page !== undefined
 		}, DEFAULT_DEBOUNCE)
 	).current
 
 	useEffect(() => {
-		debouncedFetch(query.trim())
+		debouncedQueryFetch(query.trim())
 
 		return () => {
-			debouncedFetch.cancel()
+			debouncedQueryFetch.cancel()
 		}
-	}, [query, debouncedFetch])
+	}, [query, debouncedQueryFetch])
 
 	const onChangeInput = useCallback((e: ChangeEvent<HTMLInputElement>) => {
 		setQuery(e.target.value)
 	}, [])
+
+	useEffect(() => {
+		if (scrollPosition === 0 || !hasNextPage.current) return
+
+		if (
+			Math.floor(totalGridHeight - scrollPosition) <=
+			Math.floor(containerHeight)
+		) {
+			const params = {
+				page: pageRef.current + 1,
+				per_page: MAX_ITEMS_PER_PAGE,
+				...(prevQueryRef.current.trim()
+					? { query: prevQueryRef.current.trim() }
+					: {}),
+			}
+
+			api.fetchPhotos(params).then((response) => {
+				setPhotos((prevPhotos) => [...prevPhotos, ...response.photos])
+				pageRef.current = response.page
+				hasNextPage.current = response.next_page !== undefined
+			})
+		}
+	}, [containerHeight, scrollPosition, totalGridHeight])
 
 	const calculateLayout = useCallback(() => {
 		if (!containerRef.current || photos.length === 0) {
@@ -151,13 +190,19 @@ export default function PhotosGrid() {
 		)
 	}, [containerHeight, gridItems, scrollPosition])
 
-	const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
-		const scrollTop = e.currentTarget.scrollTop
-		const debouncedSetScrollPosition = debounce(() => {
+	const debouncedSetScrollPosition = useRef(
+		debounce((scrollTop: number) => {
 			setScrollPosition(scrollTop)
 		}, SCROLL_DEBOUNCE)
-		debouncedSetScrollPosition()
-	}, [])
+	).current
+
+	const onScroll = useCallback(
+		(e: UIEvent<HTMLDivElement>) => {
+			const scrollTop = e.currentTarget.scrollTop
+			debouncedSetScrollPosition(scrollTop)
+		},
+		[debouncedSetScrollPosition]
+	)
 
 	return (
 		<div className='container mx-auto'>
