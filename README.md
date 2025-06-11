@@ -1,54 +1,108 @@
-# React + TypeScript + Vite
+# Optimized Virtualized Masonry Grid with Detailed Photo View
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Simple responsive masonry grid built with React
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prerequisites
 
-## Expanding the ESLint configuration
+Before you begin, ensure you have the following installed on your machine:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [Node.js](https://nodejs.org/en/download/) (v18.20.8 or greater)
+- [npm](https://www.npmjs.com/get-npm) (comes with Node.js)
 
-```js
-export default tseslint.config({
-	extends: [
-		// Remove ...tseslint.configs.recommended and replace with this
-		...tseslint.configs.recommendedTypeChecked,
-		// Alternatively, use this for stricter rules
-		...tseslint.configs.strictTypeChecked,
-		// Optionally, add this for stylistic rules
-		...tseslint.configs.stylisticTypeChecked,
-	],
-	languageOptions: {
-		// other options...
-		parserOptions: {
-			project: ['./tsconfig.node.json', './tsconfig.app.json'],
-			tsconfigRootDir: import.meta.dirname,
-		},
-	},
-})
+### Installation
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/santiagoballadares/photo-gallery.git
+    cd photo-gallery
+    ```
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+### API Key Setup
+
+This project requires an API key for [pexels API](https://www.pexels.com/api/documentation).
+
+1.  Duplicate the `.env.sample` file and rename it as `.env` (or create a `.env` file) in the root directory of the project.
+2.  Add your API key to this file in the following format:
+
+    ```
+    VITE_PEXELS_API_KEY=[Your_Actual_API_Key_Here]
+    ```
+
+## Running the Project
+
+To start the development server:
+
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Linting
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npm run check
+npm run check:eslint
+npm run check:prettier
 
-export default tseslint.config({
-	plugins: {
-		// Add the react-x and react-dom plugins
-		'react-x': reactX,
-		'react-dom': reactDom,
-	},
-	rules: {
-		// other rules...
-		// Enable its recommended typescript rules
-		...reactX.configs['recommended-typescript'].rules,
-		...reactDom.configs.recommended.rules,
-	},
-})
+npm run fix
+npm run fix:eslint
+npm run fix:prettier
 ```
+
+## Testing
+
+```bash
+npm run test
+```
+
+## Building for Production
+
+```bash
+npm run build
+```
+
+## Technical Discussion
+
+The project containes 3 main components PhotosGrid, PhotoGridItem, and PhotoDetails. There are other components for error display, loading, and not found page.
+
+#### Masonry Grid
+
+The masony layout is implemented by placing grid items with absolute positions in relation the the grid container for easier virtualization.
+
+#### Virtualization
+
+The viewport height and the current scroll position are used to determinate which grid items are visible. So, only visible photos are rendered.
+
+#####
+
+React hooks:
+
+- useEffect to execute side effects like fetching data from the API.
+- useCallback is used to memoize functions that are potentially expensive like calculateLayout.
+- useMemo is used to memoize the result of some calculations like columnCount.
+
+In addition, debouncing techniques are used to handle scroll and resize events as well as fetch photos with the search input value.
+
+#### Various
+
+React router is used for navigation and to load initial data for both components: PhotosGrid and PhotoDetails. This way we avoid waterfall performance issues.
+
+A singleton ApiService class encapsulates the pexels client api library [pexels-javascript](https://github.com/pexels/pexels-javascript).
+
+PhotoGridItem renders a loading placeholder to enhance the UI.
+
+#### TODO
+
+The pexels API payload includes several URLs to get the image with different dimensions. An improvement would be to choose the most relevant URL based on screen size and device.
+
+## Purpose / Disclaimer
+
+This repository is **Not intended for public distribution or general use**. All rights to the code remain with the author unless otherwise specified by prior agreement or company policy.
