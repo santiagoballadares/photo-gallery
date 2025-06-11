@@ -6,7 +6,6 @@ import { useLoaderData } from 'react-router'
 import type { Photo, Photos } from '../apiService'
 import { ApiHelper, MAX_ITEMS_PER_PAGE } from '../apiService'
 import {
-	COLUMN_WIDTH,
 	DEFAULT_DEBOUNCE,
 	RESIZE_DEBOUNCE,
 	SCROLL_DEBOUNCE,
@@ -28,6 +27,7 @@ export default function PhotosGrid() {
 
 	const containerRef = useRef<HTMLDivElement | null>(null)
 	const [containerHeight, setContainerHeight] = useState(0)
+	const [containerWidth, setContainerWidth] = useState(0)
 	const [totalGridHeight, setTotalGridHeight] = useState(0)
 
 	const [scrollPosition, setScrollPosition] = useState(0)
@@ -101,6 +101,15 @@ export default function PhotosGrid() {
 		}
 	}, [containerHeight, scrollPosition, totalGridHeight])
 
+	const columnCount = useMemo(() => {
+		if (containerWidth > 1400) return 6
+		else if (containerWidth > 1200) return 5
+		else if (containerWidth > 992) return 4
+		else if (containerWidth > 768) return 3
+		else if (containerWidth > 576) return 2
+		else return 1
+	}, [containerWidth])
+
 	const calculateLayout = useCallback(() => {
 		if (!containerRef.current || photos.length === 0) {
 			setGridItems([])
@@ -109,19 +118,16 @@ export default function PhotosGrid() {
 		}
 
 		const currentContainerWidth = containerRef.current.clientWidth
-		const estimatedColumnCount = Math.max(
-			1,
-			Math.floor(currentContainerWidth / COLUMN_WIDTH)
-		)
+		const columnWidth = currentContainerWidth / columnCount
 
-		const columnHeights = Array(estimatedColumnCount).fill(0)
+		const columnHeights = Array(columnCount).fill(0)
 
 		const updatedGridItems: GridItem[] = photos.map((photo) => {
 			const columnIndex = findMinItemIndex(columnHeights)
-			const itemLeft = columnIndex * COLUMN_WIDTH
+			const itemLeft = columnIndex * columnWidth
 			const itemTop = columnHeights[columnIndex]
 			const aspectRatio = photo.width / photo.height
-			const itemRenderHeight = COLUMN_WIDTH / aspectRatio
+			const itemRenderHeight = columnWidth / aspectRatio
 
 			columnHeights[columnIndex] += itemRenderHeight
 
@@ -132,22 +138,21 @@ export default function PhotosGrid() {
 				left: itemLeft,
 				src: photo.src.original,
 				top: itemTop,
-				width: COLUMN_WIDTH,
+				width: columnWidth,
 			}
 		})
 
 		setGridItems(updatedGridItems)
 		setTotalGridHeight(Math.max(...columnHeights))
-	}, [photos])
+	}, [photos, columnCount])
 
 	useEffect(() => {
-		calculateLayout()
-
 		const onResize = debounce(() => {
 			calculateLayout()
 
 			if (containerRef.current) {
 				setContainerHeight(containerRef.current.clientHeight)
+				setContainerWidth(containerRef.current.clientWidth)
 			}
 		}, RESIZE_DEBOUNCE)
 
@@ -155,7 +160,10 @@ export default function PhotosGrid() {
 
 		if (containerRef.current) {
 			setContainerHeight(containerRef.current.clientHeight)
+			setContainerWidth(containerRef.current.clientWidth)
 		}
+
+		calculateLayout()
 
 		return () => {
 			window.removeEventListener('resize', onResize)
@@ -205,7 +213,7 @@ export default function PhotosGrid() {
 	)
 
 	return (
-		<div className='container mx-auto'>
+		<>
 			<div className='flex flex-col sm:flex-row justify-between items-center mb-6'>
 				<h1 className='text-3xl font-bold mb-4 sm:mb-0'>Photo Gallery</h1>
 				<input
@@ -239,6 +247,6 @@ export default function PhotosGrid() {
 					))}
 				</div>
 			</div>
-		</div>
+		</>
 	)
 }
