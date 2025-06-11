@@ -1,8 +1,12 @@
 {
 	"name": "photo-gallery",
+	"description": "Optimized Virtualized Masonry Grid with Detailed Photo View",
 	"private": true,
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"type": "module",
+	"engines": {
+		"node": ">=18.20.8"
+	},
 	"scripts": {
 		"check": "npm run check:eslint && npm run check:prettier",
 		"check:eslint": "eslint --cache --cache-strategy content --max-warnings=0",
