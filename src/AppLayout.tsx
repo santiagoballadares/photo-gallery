@@ -7,7 +7,12 @@ function App() {
 				<Outlet />
 			</main>
 			<footer className='flex flex-col items-center justify-center'>
-				<p>&copy; {new Date().getFullYear()} Photo Gallery</p>
+				<p>
+					&copy; {new Date().getFullYear()} Photo Gallery.{' '}
+					<strong>
+						<a href='https://www.pexels.com'>Photos provided by Pexels</a>
+					</strong>
+				</p>
 			</footer>
 		</>
 	)
